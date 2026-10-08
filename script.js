@@ -1,16 +1,12 @@
-const mockMusicians = [
-    { name: "Никита", age: 18, instrument: "Бас-гитара", level: "Новичок (хочу учиться)", about: "Купил бас пару недель назад, хочу рубить панк-рок или альтернативу. Ищу ребят из Вологды, которые подтянут по инструменту.", vk: "https://vk.com", tg: "@nikita_bass" },
-    { name: "Макс", age: 19, instrument: "Барабаны / Перкуссия", level: "Средний (ищу группу)", about: "Ориентируюсь на Кино, Пошлую Молли, старый рок. Есть свой кардан, опыт игры год. Готов собираться по выходным на репетиции.", vk: "", tg: "@max_drums" },
-    { name: "Алёна", age: 17, instrument: "Вокал (Чистый)", level: "Профи", about: "Учусь на музыкальном, пою в разных стилях, хочу собрать банду играть инди-рок. Есть свои тексты и наработки демок.", vk: "https://vk.com", tg: "" },
-    { name: "Сергей", age: 20, instrument: "Соло-гитара", level: "Средний (ищу группу)", about: "Играю соло и ритм. Ищу единомышленников для создания кавер-группы. Жанры: гранж, рок, метал.", vk: "https://vk.com", tg: "@serg_guitar" }
-];
+const pb = new PocketBase('http://127.0.0.1:8090');
 
+let dbMusicians = [];
 let currentIndex = 0;
 let currentUser = null;
 
-function startDating() {
+async function startDating() {
     const name = document.getElementById('reg-name').value;
-    const age = document.getElementById('reg-age').value;
+    const age = parseInt(document.getElementById('reg-age').value);
     const instrument = document.getElementById('reg-instrument').value;
     const level = document.getElementById('reg-level').value;
     const vk = document.getElementById('reg-vk').value;
@@ -25,55 +21,85 @@ function startDating() {
         return alert("Пожалуйста, оставьте хотя бы один контакт (ВК или Telegram), чтобы с вами могли связаться!");
     }
 
-    currentUser = { name, age, instrument, level, vk, tg, about };
+    const data = {
+        Username: name,
+        Age: age,
+        instrument: instrument,
+        Skill_level: level,
+        vk_link: vk,
+        Nickname_TG: tg,
+        description: about
+    };
 
-    // ТОЧКА ИНТЕГРАЦИИ №1: ОТПРАВКА ДАННЫХ ТЕКУЩЕГО ПРОФИЛЯ В SUPABASE (insert)
+    try {
+        currentUser = await pb.collection('waitlist').create(data);
+        alert("Успешно! Ваша анкета создана.");
 
-    document.getElementById('screen-register').classList.add('hidden');
-    document.getElementById('screen-dating').classList.remove('hidden');
-    
-    // ТОЧКА ИНТЕГРАЦИИ №2: ЗАГРУЗКА РЕАЛЬНЫХ АНКЕТ ИЗ БАЗЫ (select) ВМЕСТО МАССИВА mockMusicians
-    
-    showCard();
+        document.getElementById('screen-register').classList.add('hidden');
+        document.getElementById('screen-dating').classList.remove('hidden');
+        
+        await loadMusicians();
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось сохранить анкету. Проверь базу данных!");
+    }
+}
+
+async function loadMusicians() {
+    try {
+        const records = await pb.collection('waitlist').getFullList({
+            sort: '-created',
+        });
+        dbMusicians = records.filter(musician => musician.id !== currentUser.id);
+        currentIndex = 0;
+        showCard();
+    } catch (error) {
+        console.error(error);
+        alert("Не удалось загрузить анкеты из базы данных.");
+    }
 }
 
 function showCard() {
-    if (currentIndex >= mockMusicians.length) {
+    if (dbMusicians.length === 0 || currentIndex >= dbMusicians.length) {
         alert("Анкеты в вашем городе временно закончились. Попробуем сначала!");
         currentIndex = 0;
+        if (dbMusicians.length === 0) return;
     }
     
-    const user = mockMusicians[currentIndex];
-    document.getElementById('view-name').innerText = user.name;
-    document.getElementById('view-meta').innerText = `${user.age} лет • ${user.instrument}`;
-    document.getElementById('view-level').innerText = user.level;
-    document.getElementById('view-about').innerText = user.about;
+    const user = dbMusicians[currentIndex];
+    document.getElementById('view-name').innerText = user.Username;
+    document.getElementById('view-meta').innerText = `${user.Age} лет • ${user.instrument}`;
+    document.getElementById('view-level').innerText = user.Skill_level;
+    document.getElementById('view-about').innerText = user.description;
 }
 
 function nextCard() {
-    // ТОЧКА ИНТЕГРАЦИИ №3: ЗАПИСЬ ДИЗЛАЙКА В ТАБЛИЦУ LIKES (status: false)
     currentIndex++;
     showCard();
 }
 
 function likeCard() {
-    const currentMusician = mockMusicians[currentIndex];
-
-    // ТОЧКА ИНТЕГРАЦИИ №4: ЗАПИСЬ ЛАЙКА В ТАБЛИЦУ LIKES (status: true) И ПРОВЕРКА ОТВЕТНОГО МЭТЧА
+    if (dbMusicians.length === 0 || !dbMusicians[currentIndex]) return;
+    
+    const currentMusician = dbMusicians[currentIndex];
 
     document.getElementById('screen-dating').classList.add('hidden');
     document.getElementById('screen-match').classList.remove('hidden');
 
-    if (currentMusician.vk) {
+    if (currentMusician.vk_link) {
         document.getElementById('match-vk-box').classList.remove('hidden');
-        document.getElementById('match-vk').href = currentMusician.vk;
+        document.getElementById('match-vk').href = currentMusician.vk_link;
     } else {
         document.getElementById('match-vk-box').classList.add('hidden');
     }
 
-    if (currentMusician.tg) {
+    if (currentMusician.Nickname_TG) {
         document.getElementById('match-tg-box').classList.remove('hidden');
-        document.getElementById('match-tg').href = currentMusician.tg.startsWith('@') ? `https://t.me{currentMusician.tg.substring(1)}` : `https://t.me{currentMusician.tg}`;
+        let tgNick = currentMusician.Nickname_TG;
+        if (tgNick.startsWith('@')) {
+            tgNick = tgNick.substring(1);
+        }
+        document.getElementById('match-tg').href = `https://t.me{tgNick}`;
     } else {
         document.getElementById('match-tg-box').classList.add('hidden');
     }
@@ -85,3 +111,6 @@ function backToDating() {
     currentIndex++;
     showCard();
 }
+    
+
+
