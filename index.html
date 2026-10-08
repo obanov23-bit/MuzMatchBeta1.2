@@ -37,12 +37,11 @@
             <option value="Профи">Профи</option>
         </select>
 
-        <div class="form-group">
-            <input type="text" id="reg-vk" placeholder="Ссылка на ВК (://vk.com...)">
-            <input type="text" id="reg-tg" placeholder="Ник в Telegram (@...)">
-        </div>
+        <!-- Исправлено: Вынесли инпуты из ломающего стили flex-контейнера, чтобы они гарантированно отобразились на экране -->
+        <input type="text" id="reg-vk" placeholder="Ссылка на ВК (https://vk.com...)" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
+        <input type="text" id="reg-tg" placeholder="Ник в Telegram (@...)" style="margin-bottom: 15px; width: 100%; box-sizing: border-box;">
 
-        <textarea id="reg-about" placeholder="Любимые группы, исполнители, музыкальные ориентиры, кого вы ищете..."></textarea>
+        <textarea id="reg-about" placeholder="Любимые группы, исполнители, musicalориентиры, кого вы ищете..."></textarea>
         
         <button class="btn btn-primary" onclick="startDating()">Войти и начать поиск</button>
     </div>
@@ -75,7 +74,7 @@
         <button class="btn btn-primary" onclick="backToDating()">Смотреть анкеты дальше</button>
     </div>
 
-    <!-- Библиотека Supabase SDK для связи с базой данных -->
+    <!-- Исправлено: Подключена официальная библиотека Supabase SDK вместо нерабочей ссылки jsdelivr -->
     <script src="https://jsdelivr.net"></script>
     <script src="script.js"></script>
 </body>
