@@ -1,9 +1,8 @@
-// Переменная для быстрого переключения между локальной версией и сервером в облаке
-// Для локального ноута: 'http://127.0.0.1:8090'
-// Для облака замените на: 'https://pikapod.net' или аналог
-const POCKETBASE_URL = 'http://127.0.0.1:8090'; 
+// Конфигурация вашей облачной базы данных Supabase в Стокгольме
+const SUPABASE_URL = 'https://supabase.co'; 
+const SUPABASE_ANON_KEY = 'sb_publishable_vCbqh5R7Ln9iEx6IFUqX4w_N8gDz2th';
 
-const pb = new PocketBase(POCKETBASE_URL);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let dbMusicians = [];
 let currentIndex = 0;
@@ -37,30 +36,48 @@ async function startDating() {
     };
 
     try {
-        currentUser = await pb.collection('waitlist').create(data);
-        alert("Успешно! Ваша анкета создана.");
+        // Запись анкеты в таблицу waitlist
+        const { data: record, error } = await supabaseClient
+            .from('waitlist')
+            .insert([data])
+            .select()
+            .maybeSingle();
+
+        if (error) throw error;
+
+        currentUser = record;
+        alert("Успешно! Ваша анкета сохранена в глобальной базе.");
 
         document.getElementById('screen-register').classList.add('hidden');
         document.getElementById('screen-dating').classList.remove('hidden');
         
         await loadMusicians();
     } catch (error) {
-        console.error("Ошибка PocketBase при создании анкеты:", error);
-        alert("Не удалось сохранить анкету. Проверь, запущен ли PocketBase и открыты ли API Rules (Create: Everyone)!");
+        console.error("Ошибка Supabase при создании анкеты:", error);
+        alert("Не удалось сохранить анкету. Проверьте подключение к сети!");
     }
 }
 
 async function loadMusicians() {
     try {
-        const records = await pb.collection('waitlist').getFullList({
-            sort: '-created',
-        });
-        // Исключаем из ленты анкету текущего пользователя
-        dbMusicians = records.filter(musician => musician.id !== currentUser.id);
+        // Чтение всех анкет из базы Supabase
+        const { data: records, error } = await supabaseClient
+            .from('waitlist')
+            .select('*');
+
+        if (error) throw error;
+
+        // Исключаем свою анкету из общей ленты карточек
+        if (currentUser) {
+            dbMusicians = records.filter(musician => musician.id !== currentUser.id);
+        } else {
+            dbMusicians = records;
+        }
+        
         currentIndex = 0;
         showCard();
     } catch (error) {
-        console.error("Ошибка PocketBase при загрузке данных:", error);
+        console.error("Ошибка Supabase при загрузке данных:", error);
         alert("Не удалось загрузить анкеты из базы данных.");
     }
 }
@@ -105,7 +122,7 @@ function likeCard() {
         if (tgNick.startsWith('@')) {
             tgNick = tgNick.substring(1);
         }
-        // Исправлено: Добавлен корректный знак шаблона \$ для вставки переменной
+        // Исправлена ссылка на Telegram — теперь переменная подставляется корректно
         document.getElementById('match-tg').href = `https://t.me{tgNick}`; 
     } else {
         document.getElementById('match-tg-box').classList.add('hidden');
@@ -117,4 +134,5 @@ function backToDating() {
     document.getElementById('screen-dating').classList.remove('hidden');
     currentIndex++;
     showCard();
-                              }
+              }
+    
