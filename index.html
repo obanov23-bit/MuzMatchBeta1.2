@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MuzMatch — Поиск музыкантов</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="screen-register" class="card">
+        <h1>MuzMatch</h1>
+        <h3>Поиск музыкантов в твоем городе</h3>
+        
+        <div class="form-group">
+            <input type="text" id="reg-name" placeholder="Имя или никнейм">
+            <input type="number" id="reg-age" placeholder="Возраст">
+        </div>
+
+        <select id="reg-instrument">
+            <option value="" disabled selected>Выберите инструмент</option>
+            <option value="Соло-гитара">Соло-гитара</option>
+            <option value="Ритм-гитара">Ритм-гитара</option>
+            <option value="Бас-гитара">Бас-гитара</option>
+            <option value="Барабаны / Перкуссия">Барабаны / Перкуссия</option>
+            <option value="Вокал (Чистый)">Вокал (Чистый)</option>
+            <option value="Вокал (Экстрим)">Вокал (Экстрим)</option>
+            <option value="Клавишные / Синтезатор">Клавишные / Синтезатор</option>
+            <option value="Скрипка">Скрипка</option>
+            <option value="Другой инструмент">Другой инструмент</option>
+        </select>
+
+        <select id="reg-level">
+            <option value="" disabled selected>Ваш уровень игры</option>
+            <option value="Новичок (хочу учиться)">Новичок (хочу учиться)</option>
+            <option value="Средний (ищу группу)">Средний (ищу группу)</option>
+            <option value="Профи">Профи</option>
+        </select>
+
+        <div class="form-group">
+            <input type="text" id="reg-vk" placeholder="Ссылка на ВК (://vk.com...)">
+            <input type="text" id="reg-tg" placeholder="Ник в Telegram (@...)">
+        </div>
+
+        <textarea id="reg-about" placeholder="Любимые группы, исполнители, музыкальные ориентиры, кого вы ищете..."></textarea>
+        
+        <button class="btn btn-primary" onclick="startDating()">Войти и начать поиск</button>
+    </div>
+
+    <div id="screen-dating" class="card hidden">
+        <h2 id="view-name">Имя</h2>
+        <div id="view-meta" class="meta-info">Возраст • Инструмент</div>
+        <div id="view-level" class="level-tag">Уровень</div>
+        <div id="view-about" class="about-text">О себе</div>
+        
+        <div class="actions-box">
+            <button class="btn btn-skip" onclick="nextCard()">Пропустить</button>
+            <button class="btn btn-like" onclick="likeCard()">Лайк</button>
+        </div>
+    </div>
+
+    <div id="screen-match" class="card hidden">
+        <div class="match-title">🔥 У вас совпадение!</div>
+        <p class="match-subtitle">Вы понравились друг другу. Самое время собрать группу или списаться!</p>
+        
+        <div class="contacts-container">
+            <div id="match-vk-box" class="contact-link hidden">
+                <span class="icon">🔗</span> <a id="match-vk" href="#" target="_blank">Профиль ВКонтакте</a>
+            </div>
+            <div id="match-tg-box" class="contact-link hidden">
+                <span class="icon">💬</span> <a id="match-tg" href="#" target="_blank">Написать в Telegram</a>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="backToDating()">Смотреть анкеты дальше</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
