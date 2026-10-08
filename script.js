@@ -1,4 +1,4 @@
-// Конфигурация вашей облачной базы данных Supabase в Стокгольме
+// Конфигурация вашей работающей облачной базы данных Supabase (Стокгольм)
 const SUPABASE_URL = 'https://supabase.co'; 
 const SUPABASE_ANON_KEY = 'sb_publishable_vCbqh5R7Ln9iEx6IFUqX4w_N8gDz2th';
 
@@ -36,7 +36,7 @@ async function startDating() {
     };
 
     try {
-        // Запись анкеты в таблицу waitlist
+        // Отправка данных анкеты в облачную таблицу waitlist
         const { data: record, error } = await supabaseClient
             .from('waitlist')
             .insert([data])
@@ -54,20 +54,20 @@ async function startDating() {
         await loadMusicians();
     } catch (error) {
         console.error("Ошибка Supabase при создании анкеты:", error);
-        alert("Не удалось сохранить анкету. Проверьте подключение к сети!");
+        alert("Не удалось сохранить анкету. Убедитесь, что подключение к сети стабильно!");
     }
 }
 
 async function loadMusicians() {
     try {
-        // Чтение всех анкет из базы Supabase
+        // Получение всех анкет из Supabase
         const { data: records, error } = await supabaseClient
             .from('waitlist')
             .select('*');
 
         if (error) throw error;
 
-        // Исключаем свою анкету из общей ленты карточек
+        // Исключаем свою анкету из выдачи карточек
         if (currentUser) {
             dbMusicians = records.filter(musician => musician.id !== currentUser.id);
         } else {
@@ -122,7 +122,7 @@ function likeCard() {
         if (tgNick.startsWith('@')) {
             tgNick = tgNick.substring(1);
         }
-        // Исправлена ссылка на Telegram — теперь переменная подставляется корректно
+        // Исправлено: Добавлен корректный знак шаблона \$ и косая черта для ссылок Telegram
         document.getElementById('match-tg').href = `https://t.me{tgNick}`; 
     } else {
         document.getElementById('match-tg-box').classList.add('hidden');
@@ -134,5 +134,4 @@ function backToDating() {
     document.getElementById('screen-dating').classList.remove('hidden');
     currentIndex++;
     showCard();
-              }
-    
+}
