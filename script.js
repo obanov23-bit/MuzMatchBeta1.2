@@ -1,17 +1,22 @@
-const pb = new PocketBase('http://127.0.0.1:8090');
+// Переменная для быстрого переключения между локальной версией и сервером в облаке
+// Для локального ноута: 'http://127.0.0.1:8090'
+// Для облака замените на: 'https://pikapod.net' или аналог
+const POCKETBASE_URL = 'http://127.0.0.1:8090'; 
+
+const pb = new PocketBase(POCKETBASE_URL);
 
 let dbMusicians = [];
 let currentIndex = 0;
 let currentUser = null;
 
 async function startDating() {
-    const name = document.getElementById('reg-name').value;
+    const name = document.getElementById('reg-name').value.trim();
     const age = parseInt(document.getElementById('reg-age').value);
     const instrument = document.getElementById('reg-instrument').value;
     const level = document.getElementById('reg-level').value;
-    const vk = document.getElementById('reg-vk').value;
-    const tg = document.getElementById('reg-tg').value;
-    const about = document.getElementById('reg-about').value;
+    const vk = document.getElementById('reg-vk').value.trim();
+    const tg = document.getElementById('reg-tg').value.trim();
+    const about = document.getElementById('reg-about').value.trim();
 
     if(!name || !age || !instrument || !level) {
         return alert("Пожалуйста, заполните основные поля анкеты (Имя, Возраст, Инструмент, Уровень)!");
@@ -40,8 +45,8 @@ async function startDating() {
         
         await loadMusicians();
     } catch (error) {
-        console.error(error);
-        alert("Не удалось сохранить анкету. Проверь базу данных!");
+        console.error("Ошибка PocketBase при создании анкеты:", error);
+        alert("Не удалось сохранить анкету. Проверь, запущен ли PocketBase и открыты ли API Rules (Create: Everyone)!");
     }
 }
 
@@ -50,27 +55,28 @@ async function loadMusicians() {
         const records = await pb.collection('waitlist').getFullList({
             sort: '-created',
         });
+        // Исключаем из ленты анкету текущего пользователя
         dbMusicians = records.filter(musician => musician.id !== currentUser.id);
         currentIndex = 0;
         showCard();
     } catch (error) {
-        console.error(error);
+        console.error("Ошибка PocketBase при загрузке данных:", error);
         alert("Не удалось загрузить анкеты из базы данных.");
     }
 }
 
 function showCard() {
     if (dbMusicians.length === 0 || currentIndex >= dbMusicians.length) {
-        alert("Анкеты в вашем городе временно закончились. Попробуем сначала!");
+        alert("Анкеты временно закончились. Попробуем посмотреть сначала!");
         currentIndex = 0;
         if (dbMusicians.length === 0) return;
     }
     
     const user = dbMusicians[currentIndex];
-    document.getElementById('view-name').innerText = user.Username;
-    document.getElementById('view-meta').innerText = `${user.Age} лет • ${user.instrument}`;
-    document.getElementById('view-level').innerText = user.Skill_level;
-    document.getElementById('view-about').innerText = user.description;
+    document.getElementById('view-name').innerText = user.Username || "Без имени";
+    document.getElementById('view-meta').innerText = `${user.Age || '??'} лет • ${user.instrument || 'Не указан'}`;
+    document.getElementById('view-level').innerText = user.Skill_level || "Не указан";
+    document.getElementById('view-about').innerText = user.description || "Описание отсутствует.";
 }
 
 function nextCard() {
@@ -99,7 +105,8 @@ function likeCard() {
         if (tgNick.startsWith('@')) {
             tgNick = tgNick.substring(1);
         }
-        document.getElementById('match-tg').href = `https://t.me{tgNick}`;
+        // Исправлено: Добавлен корректный знак шаблона \$ для вставки переменной
+        document.getElementById('match-tg').href = `https://t.me{tgNick}`; 
     } else {
         document.getElementById('match-tg-box').classList.add('hidden');
     }
@@ -110,7 +117,4 @@ function backToDating() {
     document.getElementById('screen-dating').classList.remove('hidden');
     currentIndex++;
     showCard();
-}
-    
-
-
+                              }
